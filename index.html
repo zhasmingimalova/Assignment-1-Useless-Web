@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Game</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #dce8e2;
+            color: #26332d;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            background: #f4f1e8;
+            padding: 22px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 2px solid #26332d;
+        }
+
+        h1 {
+            color: #385f53;
+            font-size: 2.2em;
+            margin-bottom: 18px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: #b8c8bd;
+            color: #26332d;
+            padding: 10px 22px;
+            border-radius: 4px;
+            border: 1px solid #26332d;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.6em;
+            font-weight: bold;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: transparent;
+            aspect-ratio: 1;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.4s;
+        }
+
+        .card:hover {
+            transform: scale(1.03);
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.flipped:hover {
+            transform: rotateY(180deg) scale(1.03);
+        }
+
+        .card.matched {
+            pointer-events: none;
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-front {
+            background: #e5ae5c;
+            color: #26332d;
+            font-size: 3em;
+            border: 2px solid #26332d;
+        }
+
+        .card-back {
+            background: #f4f1e8;
+            transform: rotateY(180deg);
+            overflow: hidden;
+            border: 2px solid #26332d;
+        }
+
+        .card-back img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .controls {
+            text-align: center;
+        }
+
+        .btn {
+            background: #385f53;
+            color: #fff;
+            border: 1px solid #26332d;
+            padding: 12px 28px;
+            border-radius: 4px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #29483e;
+        }
+
+        .btn:active {
+            background: #20382f;
+        }
+
+        .side-note {
+            position: fixed;
+            top: 50%;
+            z-index: 5;
+            width: 150px;
+            color: #385f53;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+            animation: tease 2.5s ease-in-out infinite;
+        }
+
+        #leftMessage {
+            left: 2%;
+        }
+
+        #rightMessage {
+            right: 2%;
+        }
+
+        .side-note::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            inset: -16px;
+            border-radius: 50%;
+            background: radial-gradient(
+                ellipse,
+                rgba(229, 174, 92, 0.75),
+                rgba(229, 174, 92, 0)
+            );
+            animation: glow 2.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes tease {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes glow {
+            from { opacity: 0.45; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .side-note {
+                top: 8px;
+                width: 45%;
+                font-size: 0.85em;
+            }
+
+            #leftMessage {
+                left: 2%;
+            }
+
+            #rightMessage {
+                right: 2%;
+            }
+        }
+
+        @media (max-width: 1440px) {
+            .container {
+                max-width: 850px;
+            }
+
+            .side-note {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .side-note {
+                display: none;
+            }
+        }
+
+        @media (max-width: 360px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 16px 10px;
+                margin-bottom: 14px;
+            }
+
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .stat {
+                padding: 8px 14px;
+            }
+
+            h1 {
+                font-size: 1.6em;
+                margin-bottom: 14px;
+            }
+
+            .card-front {
+                font-size: 2.2em;
+            }
+
+            .side-note {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-star"></i>
+                Memory Match Madness
+                <i class="fas fa-star"></i>
+            </h1>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">Moves</div>
+                    <div class="stat-value" id="moves">0</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">Time</div>
+                    <div class="stat-value" id="time">0:00</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">Matches</div>
+                    <div class="stat-value" id="matches">0/12</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="controls">
+            <button class="btn" onclick="newGame()">
+                <i class="fas fa-redo"></i> New Game
+            </button>
+        </div>
+    </div>
+
+    <div class="side-note" id="leftMessage">You can’t find a match</div>
+    <div class="side-note" id="rightMessage">You can’t do it</div>
+
+    <script>
+        var images = [
+            "img/image-1.jpg",
+            "img/image-2.jpg",
+            "img/image-3.jpg",
+            "img/image-4.jpg",
+            "img/image-5.jpg",
+            "img/image-6.png",
+            "img/image-7.jpg",
+            "img/image-8.jpeg",
+            "img/image-9.jpeg",
+            "img/image-10.jpg",
+            "img/image-11.jpg",
+            "img/image-12.jpg",
+        ];
+
+        var firstCard = null;
+        var secondCard = null;
+        var canFlip = true;
+        var matches = 0;
+        var moves = 0;
+        var seconds = 0;
+        var timerRunning = false;
+        var timerInterval;
+
+        var teaseMessages = ["You can’t find a match", "You can’t do it"];
+        var messageIndex = 0;
+
+        function changeTeaseMessages() {
+            messageIndex = (messageIndex + 1) % teaseMessages.length;
+
+            document.getElementById("leftMessage").textContent =
+                teaseMessages[messageIndex];
+
+            document.getElementById("rightMessage").textContent =
+                teaseMessages[(messageIndex + 1) % teaseMessages.length];
+        }
+
+        setInterval(changeTeaseMessages, 4500);
+
+        function startGame() {
+            var gameBoard = document.getElementById("gameBoard");
+            gameBoard.innerHTML = "";
+
+            var cardImages = images.slice();
+
+            cardImages.sort(function() {
+                return Math.random() - 0.5;
+            });
+
+            for (var i = 0; i < cardImages.length; i++) {
+                var card = document.createElement("div");
+                card.className = "card";
+
+                card.innerHTML =
+                    '<div class="card-front"><i class="fas fa-heart"></i></div>' +
+                    '<div class="card-back"><img src="' + cardImages[i] + '"></div>';
+
+                card.onclick = flipCard;
+                card.dataset.image = cardImages[i];
+                gameBoard.appendChild(card);
+            }
+
+            firstCard = null;
+            secondCard = null;
+            canFlip = true;
+            matches = 0;
+            moves = 0;
+            seconds = 0;
+            timerRunning = false;
+
+            updateStats();
+            clearInterval(timerInterval);
+        }
+
+        function flipCard() {
+            if (!canFlip) return;
+            if (this.classList.contains("flipped")) return;
+            if (this.classList.contains("matched")) return;
+
+            if (!timerRunning) {
+                startTimer();
+            }
+
+            this.classList.add("flipped");
+
+            if (firstCard == null) {
+                firstCard = this;
+            } else {
+                secondCard = this;
+                canFlip = false;
+                moves++;
+                changeSecondCardImage(secondCard);
+
+                updateStats();
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            var match = firstCard.dataset.image == secondCard.dataset.image;
+
+            if (match) {
+                setTimeout(function() {
+                    firstCard.classList.add("matched");
+                    secondCard.classList.add("matched");
+
+                    matches++;
+                    updateStats();
+                    resetCards();
+                }, 500);
+            } else {
+                setTimeout(function() {
+                    firstCard.classList.remove("flipped");
+                    secondCard.classList.remove("flipped");
+                    resetCards();
+                }, 1000);
+            }
+        }
+
+        function changeSecondCardImage(card) {
+            var possibleImages = images.filter(function(image) {
+                return image !== card.dataset.image && image !== firstCard.dataset.image;
+            });
+
+            var newImage = possibleImages[Math.floor(Math.random() * possibleImages.length)];
+            card.dataset.image = newImage;
+            card.querySelector(".card-back img").src = newImage;
+        }
+
+        function resetCards() {
+            firstCard = null;
+            secondCard = null;
+            canFlip = true;
+        }
+
+        function startTimer() {
+            timerRunning = true;
+
+            timerInterval = setInterval(function() {
+                seconds++;
+                updateStats();
+            }, 1000);
+        }
+
+        function updateStats() {
+            document.getElementById("moves").textContent = moves;
+            document.getElementById("matches").textContent = matches + "/12";
+
+            var mins = Math.floor(seconds / 60);
+            var secs = seconds % 60;
+
+            if (secs < 10) {
+                secs = "0" + secs;
+            }
+
+            document.getElementById("time").textContent = mins + ":" + secs;
+        }
+
+        function newGame() {
+            clearInterval(timerInterval);
+            startGame();
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
